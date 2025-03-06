@@ -4,7 +4,10 @@ import os
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
+from dotenv import load_dotenv
 
+# Загрузка переменных окружения из .env
+load_dotenv()
 
 from app.database import Base
 from app import models
@@ -19,6 +22,12 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 sys.path.append(os.getcwd())
+
+# Получаем строку подключения из переменных окружения
+database_url = os.getenv('DATABASE_URL')
+
+# Обновляем конфигурацию Alembic с реальной строкой подключения
+config.set_main_option('sqlalchemy.url', database_url)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
