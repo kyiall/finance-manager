@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 
 class CategoryBase(BaseModel):
@@ -16,7 +16,7 @@ class CategoryResponse(CategoryBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class TransactionBase(BaseModel):
@@ -36,7 +36,7 @@ class TransactionResponse(TransactionBase):
     category: CategoryResponse
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class SubscriberPlanBase(BaseModel):
@@ -53,7 +53,7 @@ class SubscriberPlanResponse(SubscriberPlanBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class SubscriptionBase(BaseModel):
@@ -68,10 +68,10 @@ class SubscriptionCreate(SubscriptionBase):
 
 class SubscriptionResponse(SubscriptionBase):
     id: int
-    subscriber_plan = SubscriberPlanResponse
+    subscriber_plan: SubscriberPlanResponse
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserBase(BaseModel):
@@ -86,7 +86,7 @@ class UserResponse(UserBase):
     id: int
     transactions: List[TransactionResponse] = []
     categories: List[CategoryResponse] = []
-    subscription: SubscriptionResponse = None
+    subscription: Optional[SubscriptionResponse] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True

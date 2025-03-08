@@ -8,6 +8,9 @@ fastapi = {extras = ["all"], version = "*"}
 sqlalchemy = "*"
 alembic = "*"
 psycopg2 = "*"
+passlib = "*"
+python-jose = {extras = ["cryptography"], version = "*"}
+email-validator = "*"
 
 [dev-packages]
 
