@@ -1,9 +1,9 @@
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
+from .models import User, Transaction, SubscriberPlan, Subscription, Category
+from .schemas import UserCreate, TransactionCreate, SubscriberPlanCreate, SubscriptionCreate, CategoryCreate
 from .security import hash_password
-from .models import User, Transaction, SubscriberPlan, Subscription
-from .schemas import UserCreate, TransactionCreate, SubscriberPlanCreate, SubscriptionCreate
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
@@ -51,3 +51,15 @@ def create_subscription(db: Session, subscription: SubscriptionCreate, user_id: 
     db.commit()
     db.refresh(db_subscription)
     return db_subscription
+
+
+def create_category(db: Session, category: CategoryCreate, user_id: int):
+    db_category = Category(**category.dict(), user_id=user_id)
+    db.add(db_category)
+    db.commit()
+    db.refresh(db_category)
+    return db_category
+
+
+def get_categories(db: Session, user_id: int):
+    return db.query(Category).filter(Category.user_id == user_id).all()
