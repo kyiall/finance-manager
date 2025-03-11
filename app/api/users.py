@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.config import get_db
 from app.crud.users import get_user_by_email, create_user, create_subscription, update_subscription, get_current_user
-from app.database import get_db
 from app.models import User
 from app.schemas import UserResponse, UserCreate, SubscriptionCreate, SubscriptionResponse, SubscriptionUpdate
 

@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from jose import jwt
 from sqlalchemy.orm import Session
 
+from app.core.config import get_db
 from app.crud.users import get_user_by_email
-from app.database import get_db
 from app.models import Subscription
 from app.schemas import UserCreate
 from app.security import verify_password, create_access_token, create_refresh_token, decode_token

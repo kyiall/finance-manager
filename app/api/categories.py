@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.config import get_db
 from app.crud.categories import create_category, get_categories, update_category
 from app.crud.users import get_current_user
-from app.database import get_db
 from app.models import User, Category
 from app.schemas import CategoryResponse, CategoryCreate, CategoryUpdate
 
