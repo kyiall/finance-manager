@@ -15,11 +15,19 @@ def add_category(category_date: CategoryCreate, user_id: int, db: Session = Depe
     user = db.query(User).filter(User.id == user_id).first()
     if not user.subscription or not user.subscription.is_active:
         if category_date.is_expense:
-            if db.query(Category).filter(Category.user_id == user.id, Category.is_expense.is_(True)).count() >= 10:
+            if db.query(Category).filter(
+                Category.user_id == user.id,
+                Category.is_expense.is_(True),
+                Category.is_active.is_(True)
+            ).count() >= 10:
                 raise HTTPException(
                     status_code=400, detail="Для добавления больше 10 категорий расходов оформите подписку"
                 )
-        elif db.query(Category).filter(Category.user_id == user.id, Category.is_expense.is_(False)).count() >= 5:
+        elif db.query(Category).filter(
+            Category.user_id == user.id,
+            Category.is_expense.is_(False),
+            Category.is_active.is_(True)
+        ).count() >= 5:
             raise HTTPException(
                 status_code=400, detail="Для добавления больше 5 категорий доходов оформите подписку"
             )
