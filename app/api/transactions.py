@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -14,8 +16,19 @@ def add_transaction(transaction_data: TransactionCreate, user_id: int, db: Sessi
 
 
 @router.get("/transactions/", response_model=dict)
-def list_transactions(user_id: int, is_expense: bool, category_id: int, db: Session = Depends(get_db)):
-    transactions = get_transactions(db, user_id, is_expense, category_id)
+def list_transactions(
+        user_id: int,
+        is_expense: bool,
+        category_id: int | None = None,
+        year: int | None = None,
+        month: int | None = None,
+        db: Session = Depends(get_db)
+):
+    if not year or not month:
+        now = datetime.now()
+        year = now.year
+        month = now.month
+    transactions = get_transactions(db, user_id, is_expense, category_id, year, month)
     serialized_transactions = [
         TransactionResponse.model_validate(transaction).model_dump() for transaction in transactions
     ]

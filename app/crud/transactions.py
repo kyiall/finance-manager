@@ -16,15 +16,16 @@ def create_transaction(db: Session, transaction_data: TransactionCreate, user_id
     return db_transaction
 
 
-def get_transactions(db: Session, user_id: int, is_expense: bool, category_id: int):
-    now = datetime.now()
-    return db.query(Transaction).filter(
+def get_transactions(db: Session, user_id: int, is_expense: bool, category_id: int, year: int, month: int):
+    filters = [
         Transaction.user_id == user_id,
         Transaction.is_expense == is_expense,
-        Transaction.category_id == category_id,
-        extract("year", Transaction.created_at) == now.year,
-        extract("month", Transaction.created_at) == now.month
-    ).all()
+        extract("year", Transaction.created_at) == year,
+        extract("month", Transaction.created_at) == month
+    ]
+    if category_id:
+        filters.append(Transaction.category_id == category_id)
+    return db.query(Transaction).filter(*filters).all()
 
 
 def update_transaction(db: Session, transaction_data: TransactionUpdate, transaction_id: int):
