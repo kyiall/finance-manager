@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import List, Optional
 
@@ -6,6 +6,10 @@ from typing import List, Optional
 class CategoryBase(BaseModel):
     title: str
     is_expense: bool
+
+
+class CategoryUpdate(BaseModel):
+    title: str | None = None
 
 
 class CategoryCreate(CategoryBase):
@@ -21,9 +25,15 @@ class CategoryResponse(CategoryBase):
 
 class TransactionBase(BaseModel):
     amount: float
-    comment: str
+    comment: str | None = None
     is_expense: bool
     category_id: int
+
+
+class TransactionUpdate(BaseModel):
+    amount: float | None = None
+    comment: str | None = None
+    category_id: int | None = None
 
 
 class TransactionCreate(TransactionBase):
@@ -45,6 +55,12 @@ class SubscriberPlanBase(BaseModel):
     cost: float
 
 
+class SubscriberPlanUpdate(BaseModel):
+    title: str | None = None
+    days: int | None = None
+    cost: float | None = None
+
+
 class SubscriberPlanCreate(SubscriberPlanBase):
     pass
 
@@ -62,6 +78,10 @@ class SubscriptionBase(BaseModel):
     subscriber_plan_id: int
 
 
+class SubscriptionUpdate(BaseModel):
+    subscriber_plan_id: int
+
+
 class SubscriptionCreate(SubscriptionBase):
     pass
 
@@ -75,7 +95,7 @@ class SubscriptionResponse(SubscriptionBase):
 
 
 class UserBase(BaseModel):
-    email: str
+    email: EmailStr
 
 
 class UserCreate(UserBase):

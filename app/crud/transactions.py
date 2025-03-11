@@ -1,0 +1,38 @@
+from datetime import datetime
+
+from fastapi import HTTPException
+from sqlalchemy import extract
+from sqlalchemy.orm import Session
+
+from app.models import Transaction
+from app.schemas import TransactionCreate, TransactionUpdate
+
+
+def create_transaction(db: Session, transaction_data: TransactionCreate, user_id: int):
+    db_transaction = Transaction(**transaction_data.dict(), user_id=user_id)
+    db.add(db_transaction)
+    db.commit()
+    db.refresh(db_transaction)
+    return db_transaction
+
+
+def get_transactions(db: Session, user_id: int, is_expense: bool, category_id: int):
+    now = datetime.now()
+    return db.query(Transaction).filter(
+        Transaction.user_id == user_id,
+        Transaction.is_expense == is_expense,
+        Transaction.category_id == category_id,
+        extract("year", Transaction.created_at) == now.year,
+        extract("month", Transaction.created_at) == now.month
+    ).all()
+
+
+def update_transaction(db: Session, transaction_data: TransactionUpdate, transaction_id: int):
+    transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Транзакция не найдена")
+    for key, value in transaction_data.model_dump(exclude_unset=True).items():
+        setattr(transaction, key, value)
+    db.commit()
+    db.refresh(transaction)
+    return transaction

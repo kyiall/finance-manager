@@ -1,18 +1,24 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.crud import create_subscriber_plan, get_subscriber_plans
+from app.crud.subscriber_plans import create_subscriber_plan, get_subscriber_plans, update_subscriber_plan
 from app.database import get_db
-from app.schemas import SubscriberPlanResponse, SubscriberPlanCreate
+from app.schemas import SubscriberPlanResponse, SubscriberPlanCreate, SubscriberPlanUpdate
 
 router = APIRouter()
 
 
 @router.post("/subscriber-plans/", response_model=SubscriberPlanResponse)
-def add_transaction(subscriber_plan: SubscriberPlanCreate, db: Session = Depends(get_db)):
-    return create_subscriber_plan(db, subscriber_plan)
+def add_subscriber_plan(subscriber_plan_data: SubscriberPlanCreate, db: Session = Depends(get_db)):
+    return create_subscriber_plan(db, subscriber_plan_data)
 
 
 @router.get("/subscriber-plans/", response_model=list[SubscriberPlanResponse])
-def list_transactions(db: Session = Depends(get_db)):
+def list_subscriber_plans(db: Session = Depends(get_db)):
     return get_subscriber_plans(db)
+
+
+@router.put("/subscriber-plan/{id}/", response_model=SubscriberPlanResponse)
+def edit_subscriber_plan(subscriber_plan_id: int, subscriber_plan_data: SubscriberPlanUpdate,
+                         db: Session = Depends(get_db)):
+    return update_subscriber_plan(db, subscriber_plan_data, subscriber_plan_id)

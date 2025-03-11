@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from jose import jwt
 from sqlalchemy.orm import Session
 
-from app.crud import get_user_by_email
+from app.crud.users import get_user_by_email
 from app.database import get_db
+from app.models import Subscription
 from app.schemas import UserCreate
 from app.security import verify_password, create_access_token, create_refresh_token, decode_token
 
@@ -18,7 +19,14 @@ def login(user_data: UserCreate, db: Session = Depends(get_db)):
 
     access_token = create_access_token({"sub": user.email})
     refresh_token = create_refresh_token({"sub": user.email})
-    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+    subscription = db.query(Subscription).filter(Subscription.user_id == user.id).first()
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "subscription_id": subscription.id,
+        "user_id": user.id
+    }
 
 
 @router.post("/refresh")
