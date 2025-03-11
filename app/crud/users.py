@@ -1,9 +1,12 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt
 from sqlalchemy.orm import Session
 
+from app.database import get_db
 from app.models import User, Subscription
 from app.schemas import UserCreate, SubscriptionCreate, SubscriptionUpdate
-from app.security import hash_password
+from app.security import hash_password, decode_token
 
 
 def get_user_by_email(db: Session, email: str):
@@ -36,3 +39,23 @@ def update_subscription(db: Session, subscription_data: SubscriptionUpdate, subs
     db.commit()
     db.refresh(subscription)
     return subscription
+
+
+security = HTTPBearer()
+
+
+def get_current_user(db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Security(security)):
+    token = credentials.credentials
+    try:
+        payload = decode_token(token)
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
