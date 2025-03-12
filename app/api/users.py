@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.config import get_db
-from app.crud.users import get_user_by_email, create_user, create_subscription, update_subscription, get_current_user
+from app.crud.users import get_user_by_email, create_user, create_subscription, update_subscription
 from app.models import User
 from app.schemas import UserResponse, UserCreate, SubscriptionCreate, SubscriptionResponse, SubscriptionUpdate
+from app.security import get_current_user
 
 router = APIRouter()
 
@@ -18,8 +19,12 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/subscriptions/", response_model=SubscriptionResponse)
-def add_subscription(subscription_data: SubscriptionCreate, user_id: int, db: Session = Depends(get_db)):
-    return create_subscription(db, subscription_data, user_id)
+def add_subscription(
+        subscription_data: SubscriptionCreate,
+        db: Session = Depends(get_db),
+        user: User = Depends(get_current_user)
+):
+    return create_subscription(db, subscription_data, user.id)
 
 
 @router.put("/subscriptions/{id}", response_model=SubscriptionResponse)
@@ -29,4 +34,4 @@ def edit_subscription(
         db: Session = Depends(get_db),
         user: User = Depends(get_current_user)
 ):
-    return update_subscription(db, subscription_data, subscription_id)
+    return update_subscription(db, subscription_data, subscription_id, user.id)

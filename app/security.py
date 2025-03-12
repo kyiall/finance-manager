@@ -1,9 +1,14 @@
 from datetime import datetime, timedelta, timezone
 
+from fastapi import Depends, Security, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt
 from passlib.context import CryptContext
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
+from app.core.config import settings, get_db
+from app.models import User
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
@@ -32,3 +37,26 @@ def create_refresh_token(data: dict) -> str:
 
 def decode_token(token: str):
     return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+
+
+security = HTTPBearer()
+
+
+async def get_current_user(
+        db: AsyncSession = Depends(get_db),
+        credentials: HTTPAuthorizationCredentials = Security(security)
+):
+    token = credentials.credentials
+    try:
+        payload = decode_token(token)
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user = (await db.scalars(select(User).where(User.id == int(user_id)))).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")

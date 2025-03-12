@@ -11,6 +11,7 @@ psycopg2 = "*"
 passlib = "*"
 python-jose = {extras = ["cryptography"], version = "*"}
 email-validator = "*"
+asyncpg = "*"
 
 [dev-packages]
 

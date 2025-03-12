@@ -1,29 +1,43 @@
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.utils import CustomError
 from app.models import Category
 from app.schemas import CategoryCreate, CategoryUpdate
 
 
-def create_category(db: Session, category_data: CategoryCreate, user_id: int):
+async def create_category(
+        db: AsyncSession,
+        category_data: CategoryCreate,
+        user_id: int
+):
     db_category = Category(**category_data.dict(), user_id=user_id)
     db.add(db_category)
-    db.commit()
-    db.refresh(db_category)
+    await db.commit()
+    await db.refresh(db_category)
     return db_category
 
 
-def get_categories(db: Session, user_id: int):
-    return db.query(Category).filter(Category.user_id == user_id).all()
+async def get_categories(db: AsyncSession, user_id: int):
+    query = select(Category).where(Category.user_id == user_id)
+    result = await db.execute(query)
+    return result.scalars().all()
 
 
-def update_category(db: Session, category_data: CategoryUpdate, category_id: int):
-    category = db.query(Category).filter(Category.id == category_id).first()
+async def update_category(
+        db: AsyncSession,
+        category_data: CategoryUpdate,
+        category_id: int,
+        user_id: int
+):
+    category = (await db.scalars(select(Category).where(Category.id == category_id))).first()
     if not category:
-        raise HTTPException(status_code=404, detail="Категория не найдена")
+        raise CustomError(status_code=404, name="Категория не найдена")
+    if category.user_id != user_id:
+        raise CustomError(status_code=403, name="Нет прав для редактирования данной категории")
     for key, value in category_data.model_dump(exclude_unset=True).items():
         setattr(category, key, value)
 
-    db.commit()
-    db.refresh(category)
+    await db.commit()
+    await db.refresh(category)
     return category

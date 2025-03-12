@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_db
 from app.crud.subscriber_plans import create_subscriber_plan, get_subscriber_plans, update_subscriber_plan
-from app.crud.users import get_current_user
 from app.models import User
 from app.schemas import SubscriberPlanResponse, SubscriberPlanCreate, SubscriberPlanUpdate
+from app.security import get_current_user
 
 router = APIRouter()
 
