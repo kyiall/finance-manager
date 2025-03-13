@@ -1,7 +1,14 @@
+import enum
+
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, func
 from sqlalchemy.orm import relationship
 
 from app.core.config import Base
+
+
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    USER = "user"
 
 
 class BaseModel(Base):
@@ -17,10 +24,17 @@ class User(BaseModel):
 
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    role = Column(String, default=UserRole.USER.value)
 
-    transactions = relationship("Transaction", back_populates="owner", passive_deletes=True)
-    categories = relationship("Category", back_populates="owner", passive_deletes=True)
-    subscription = relationship("Subscription", back_populates="owner", uselist=False, passive_deletes=True)
+    transactions = relationship(
+        "Transaction", back_populates="owner", passive_deletes=True, lazy="selectin"
+    )
+    categories = relationship(
+        "Category", back_populates="owner", passive_deletes=True, lazy="selectin"
+    )
+    subscription = relationship(
+        "Subscription", back_populates="owner", uselist=False, passive_deletes=True, lazy="selectin"
+    )
 
 
 class Transaction(BaseModel):
@@ -32,8 +46,8 @@ class Transaction(BaseModel):
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
 
-    category = relationship("Category", back_populates="transactions")
-    owner = relationship("User", back_populates="transactions")
+    category = relationship("Category", back_populates="transactions", lazy="selectin")
+    owner = relationship("User", back_populates="transactions", lazy="selectin")
 
 
 class Category(BaseModel):
@@ -44,8 +58,8 @@ class Category(BaseModel):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     is_active = Column(Boolean, default=True)
 
-    owner = relationship("User", back_populates="categories")
-    transactions = relationship("Transaction", back_populates="category")
+    owner = relationship("User", back_populates="categories", lazy="selectin")
+    transactions = relationship("Transaction", back_populates="category", lazy="selectin")
 
 
 class Subscription(BaseModel):
@@ -56,8 +70,8 @@ class Subscription(BaseModel):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
     subscriber_plan_id = Column(Integer, ForeignKey("subscriber_plans.id"))
 
-    owner = relationship("User", back_populates="subscription")
-    subscriber_plan = relationship("SubscriberPlan", back_populates="subscriptions")
+    owner = relationship("User", back_populates="subscription", lazy="selectin")
+    subscriber_plan = relationship("SubscriberPlan", back_populates="subscriptions", lazy="selectin")
 
 
 class SubscriberPlan(BaseModel):
@@ -67,4 +81,4 @@ class SubscriberPlan(BaseModel):
     days = Column(Integer)
     cost = Column(Float)
 
-    subscriptions = relationship("Subscription", back_populates="subscriber_plan")
+    subscriptions = relationship("Subscription", back_populates="subscriber_plan", lazy="selectin")

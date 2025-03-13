@@ -16,7 +16,7 @@ async def create_user(db: AsyncSession, user_data: UserCreate):
     db_user = User(email=user_data.email, hashed_password=hashed_password)
     db.add(db_user)
     await db.commit()
-    await db.refresh(db_user, ["transactions", "categories", "subscription"])
+    await db.refresh(db_user)
     return db_user
 
 
@@ -28,7 +28,7 @@ async def create_subscription(
     db_subscription = Subscription(**subscription_data.dict(), user_id=user_id)
     db.add(db_subscription)
     await db.commit()
-    await db.refresh(db_subscription, ["subscriber_plan"])
+    await db.refresh(db_subscription)
     return db_subscription
 
 

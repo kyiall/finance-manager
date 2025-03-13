@@ -1,3 +1,5 @@
+from enum import Enum
+
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import List, Optional
@@ -96,11 +98,21 @@ class SubscriptionResponse(SubscriptionBase):
         from_attributes = True
 
 
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    USER = "user"
+
+
 class UserBase(BaseModel):
     email: EmailStr
 
 
 class UserCreate(UserBase):
+    password: str
+    role: UserRole = UserRole.USER
+
+
+class UserLogin(UserBase):
     password: str
 
 
