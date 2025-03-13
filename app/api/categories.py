@@ -7,7 +7,7 @@ from app.core.config import get_db
 from app.crud.categories import create_category, get_categories, update_category
 from app.models import User, Category
 from app.schemas import CategoryResponse, CategoryCreate, CategoryUpdate
-from app.security import get_current_user
+from app.core.security import get_current_user
 
 router = APIRouter()
 

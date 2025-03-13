@@ -52,7 +52,7 @@ class Subscription(BaseModel):
     __tablename__ = "subscriptions"
 
     is_active = Column(Boolean, default=False)
-    active_until = Column(DateTime)
+    active_until = Column(DateTime(timezone=True), default=func.now())
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
     subscriber_plan_id = Column(Integer, ForeignKey("subscriber_plans.id"))
 
