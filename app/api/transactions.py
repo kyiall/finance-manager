@@ -1,10 +1,14 @@
 from datetime import datetime
 
+import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_db
+from app.core.redis_conf import get_redis
 from app.core.security import get_current_user
+from app.core.utils import CustomError
+from app.crud.balance import get_balance
 from app.crud.transactions import create_transaction, get_transactions, update_transaction
 from app.models import User
 from app.schemas import TransactionResponse, TransactionCreate, TransactionUpdate
@@ -16,9 +20,13 @@ router = APIRouter()
 async def add_transaction(
         transaction_data: TransactionCreate,
         db: AsyncSession = Depends(get_db),
-        user: User = Depends(get_current_user)
+        user: User = Depends(get_current_user),
+        redis: aioredis.Redis = Depends(get_redis),
 ):
-    return await create_transaction(db, transaction_data, user.id)
+    balance = await get_balance(user.id, redis)
+    if transaction_data.is_expense and balance < transaction_data.amount:
+        raise CustomError(status_code=400, name="Недостаточно средств на балансе")
+    return await create_transaction(db, transaction_data, user.id, redis)
 
 
 @router.get("/transactions/", response_model=dict)

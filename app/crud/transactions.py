@@ -2,6 +2,7 @@ from sqlalchemy import extract, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.utils import CustomError
+from app.crud.balance import update_balance
 from app.models import Transaction
 from app.schemas import TransactionCreate, TransactionUpdate
 
@@ -9,12 +10,14 @@ from app.schemas import TransactionCreate, TransactionUpdate
 async def create_transaction(
         db: AsyncSession,
         transaction_data: TransactionCreate,
-        user_id: int
+        user_id: int,
+        redis
 ):
     db_transaction = Transaction(**transaction_data.dict(), user_id=user_id)
     db.add(db_transaction)
     await db.commit()
     await db.refresh(db_transaction)
+    await update_balance(user_id, db_transaction.amount, db_transaction.is_expense, redis)
     return db_transaction
 
 
@@ -52,4 +55,5 @@ async def update_transaction(
         setattr(transaction, key, value)
     await db.commit()
     await db.refresh(transaction)
+    await update_balance(user_id, transaction.amount, transaction.is_expense)
     return transaction
