@@ -9,4 +9,5 @@ async def update_balance(user_id: int, amount: float, is_expense: bool, redis):
         balance = 0
     if is_expense:
         await redis.set(user_id, float(balance) - amount)
-    await redis.set(user_id, float(balance) + amount)
+    else:
+        await redis.set(user_id, float(balance) + amount)

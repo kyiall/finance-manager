@@ -7,9 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_db
 from app.core.redis_conf import get_redis
 from app.core.security import get_current_user
-from app.core.utils import CustomError
-from app.crud.balance import get_balance
-from app.crud.transactions import create_transaction, get_transactions, update_transaction
+from app.crud.transactions import create_transaction, get_transactions, update_transaction, delete_transaction
 from app.models import User
 from app.schemas import TransactionResponse, TransactionCreate, TransactionUpdate
 
@@ -23,9 +21,6 @@ async def add_transaction(
         user: User = Depends(get_current_user),
         redis: aioredis.Redis = Depends(get_redis),
 ):
-    balance = await get_balance(user.id, redis)
-    if transaction_data.is_expense and balance < transaction_data.amount:
-        raise CustomError(status_code=400, name="Недостаточно средств на балансе")
     return await create_transaction(db, transaction_data, user.id, redis)
 
 
@@ -55,6 +50,17 @@ async def edit_transaction(
         transaction_id: int,
         transaction_data: TransactionUpdate,
         db: AsyncSession = Depends(get_db),
-        user: User = Depends(get_current_user)
+        user: User = Depends(get_current_user),
+        redis: aioredis = Depends(get_redis)
 ):
-    return await update_transaction(db, transaction_data, transaction_id, user.id)
+    return await update_transaction(db, transaction_data, transaction_id, user.id, redis)
+
+
+@router.delete("/transactions/{id}")
+async def remove_transaction(
+        transaction_id: int,
+        db: AsyncSession = Depends(get_db),
+        user: User = Depends(get_current_user),
+        redis: aioredis = Depends(get_redis)
+):
+    await delete_transaction(db, transaction_id, user.id, redis)

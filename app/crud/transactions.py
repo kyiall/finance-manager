@@ -2,7 +2,7 @@ from sqlalchemy import extract, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.utils import CustomError
-from app.crud.balance import update_balance
+from app.crud.balance import update_balance, get_balance
 from app.models import Transaction
 from app.schemas import TransactionCreate, TransactionUpdate
 
@@ -13,6 +13,9 @@ async def create_transaction(
         user_id: int,
         redis
 ):
+    balance = await get_balance(user_id, redis)
+    if transaction_data.is_expense and float(balance) < transaction_data.amount:
+        raise CustomError(status_code=400, name="Недостаточно средств на балансе")
     db_transaction = Transaction(**transaction_data.dict(), user_id=user_id)
     db.add(db_transaction)
     await db.commit()
@@ -44,16 +47,40 @@ async def update_transaction(
         db: AsyncSession,
         transaction_data: TransactionUpdate,
         transaction_id: int,
-        user_id: int
+        user_id: int,
+        redis
 ):
     transaction = (await db.scalars(select(Transaction).where(Transaction.id == transaction_id))).first()
     if not transaction:
         raise CustomError(status_code=404, name="Транзакция не найдена")
     if transaction.user_id != user_id:
         raise CustomError(status_code=403, name="Нет прав для редактирования данной транзакции")
+    balance = await get_balance(user_id, redis)
+    if transaction.is_expense and (float(balance) + transaction.amount) < transaction_data.amount:
+        raise CustomError(status_code=400, name="Недостаточно средств")
+    else:
+        await redis.set(user_id, float(balance) + transaction.amount)
     for key, value in transaction_data.model_dump(exclude_unset=True).items():
         setattr(transaction, key, value)
     await db.commit()
     await db.refresh(transaction)
-    await update_balance(user_id, transaction.amount, transaction.is_expense)
+    await update_balance(user_id, transaction.amount, transaction.is_expense, redis)
     return transaction
+
+
+async def delete_transaction(
+        db: AsyncSession,
+        transaction_id: int,
+        user_id: int,
+        redis
+):
+    transaction = (await db.scalars(select(Transaction).where(Transaction.id == transaction_id))).first()
+    if not transaction:
+        raise CustomError(status_code=404, name="Транзакция не найдена")
+    if transaction.user_id != user_id:
+        raise CustomError(status_code=403, name="Нет прав для редактирования данной транзакции")
+    balance = await get_balance(user_id, redis)
+    amount = transaction.amount
+    await db.delete(transaction)
+    await db.commit()
+    await redis.set(user_id, float(balance) + amount)
