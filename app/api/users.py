@@ -7,7 +7,7 @@ from app.core.redis_conf import get_redis
 from app.core.security import get_current_user
 from app.crud.balance import get_user_balance
 from app.crud.users import create_subscription
-from app.models import User
+from app.models.users import User
 from app.schemas.users import UserResponse, UserCreate, SubscriptionCreate, SubscriptionResponse, SubscriptionUpdate
 from app.services.users import UserService
 

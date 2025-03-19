@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
-from app.models import User, Subscription
+from app.models.users import User, Subscription
 from app.schemas.users import UserCreate, SubscriptionCreate, SubscriptionUpdate
 
 

@@ -1,7 +1,7 @@
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Category
+from app.models.categories import Category
 from app.schemas.categories import CategoryCreate, CategoryUpdate
 
 

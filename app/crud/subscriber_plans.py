@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.utils import CustomError
-from app.models import SubscriberPlan
+from app.models.subscriber_plans import SubscriberPlan
 from app.schemas.subscriber_plans import SubscriberPlanCreate, SubscriberPlanUpdate
 
 
