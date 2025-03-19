@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_db
+from app.core.db import get_db
 from app.core.security import check_user_role
 from app.crud.subscriber_plans import create_subscriber_plan, get_subscriber_plans, update_subscriber_plan
-from app.schemas import SubscriberPlanResponse, SubscriberPlanCreate, SubscriberPlanUpdate
+from app.schemas.subscriber_plans import SubscriberPlanResponse, SubscriberPlanCreate, SubscriberPlanUpdate
 
 router = APIRouter(prefix="/subscriber-plan", dependencies=[Depends(check_user_role)])
 

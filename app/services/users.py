@@ -6,7 +6,7 @@ from app.core.security import verify_password, create_access_token, create_refre
 from app.core.utils import CustomError
 from app.crud.balance import get_user_balance
 from app.crud.users import get_user_by_email, create_user, update_subscription, get_subscription
-from app.schemas import UserCreate, SubscriptionUpdate, UserLogin
+from app.schemas.users import UserCreate, SubscriptionUpdate, UserLogin
 
 
 class UserService:

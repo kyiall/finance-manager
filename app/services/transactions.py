@@ -4,7 +4,7 @@ from app.core.utils import CustomError
 from app.crud.balance import get_user_balance
 from app.crud.transactions import get_transactions, get_transaction, update_transaction, create_transaction, \
     delete_transaction
-from app.schemas import TransactionUpdate, TransactionCreate
+from app.schemas.transactions import TransactionUpdate, TransactionCreate
 import redis.asyncio as aioredis
 
 

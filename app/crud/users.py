@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
 from app.models import User, Subscription
-from app.schemas import UserCreate, SubscriptionCreate, SubscriptionUpdate
+from app.schemas.users import UserCreate, SubscriptionCreate, SubscriptionUpdate
 
 
 async def get_user_by_email(db: AsyncSession, email: str):

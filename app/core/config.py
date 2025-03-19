@@ -1,6 +1,4 @@
 from pydantic_settings import BaseSettings
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlalchemy.ext.declarative import declarative_base
 
 
 class Settings(BaseSettings):
@@ -17,11 +15,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-engine = create_async_engine(settings.DATABASE_URL)
-SessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False)
-Base = declarative_base()
-
-
-async def get_db():
-    async with SessionLocal() as db:
-        yield db

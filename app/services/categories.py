@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.utils import CustomError
 from app.crud.categories import create_category, count_categories, update_category, get_category
 from app.models import User, Category
-from app.schemas import CategoryCreate, CategoryUpdate
+from app.schemas.categories import CategoryCreate, CategoryUpdate
 
 
 class CategoryService:

@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.utils import CustomError
 from app.models import SubscriberPlan
-from app.schemas import SubscriberPlanCreate, SubscriberPlanUpdate
+from app.schemas.subscriber_plans import SubscriberPlanCreate, SubscriberPlanUpdate
 
 
 async def create_subscriber_plan(

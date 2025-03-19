@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.balance import update_balance
 from app.models import Transaction
-from app.schemas import TransactionCreate, TransactionUpdate
+from app.schemas.transactions import TransactionCreate, TransactionUpdate
 
 
 async def create_transaction(
