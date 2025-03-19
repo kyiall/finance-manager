@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,60 +5,51 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_db
 from app.core.redis_conf import get_redis
 from app.core.security import get_current_user
-from app.crud.transactions import create_transaction, get_transactions, update_transaction, delete_transaction
 from app.models import User
-from app.schemas import TransactionResponse, TransactionCreate, TransactionUpdate
+from app.schemas import TransactionResponse, TransactionCreate, TransactionUpdate, TransactionList, \
+    TransactionListParams
+from app.services.transactions import TransactionService
 
-router = APIRouter()
+router = APIRouter(prefix="/transactions")
 
 
-@router.post("/transactions/", response_model=TransactionResponse)
+@router.post("", response_model=TransactionResponse)
 async def add_transaction(
         transaction_data: TransactionCreate,
         db: AsyncSession = Depends(get_db),
         user: User = Depends(get_current_user),
         redis: aioredis.Redis = Depends(get_redis),
 ):
-    return await create_transaction(db, transaction_data, user.id, redis)
+    return await TransactionService.add_transaction(db, transaction_data, user.id, redis)
 
 
-@router.get("/transactions/", response_model=dict)
+@router.get("", response_model=TransactionList)
 async def list_transactions(
-        is_expense: bool,
-        category_id: int | None = None,
-        year: int | None = None,
-        month: int | None = None,
+        params: TransactionListParams = Depends(),
         db: AsyncSession = Depends(get_db),
         user: User = Depends(get_current_user)
 ):
-    if not year or not month:
-        now = datetime.now()
-        year = now.year
-        month = now.month
-    transactions = await get_transactions(db, user.id, is_expense, category_id, year, month)
-    serialized_transactions = [
-        TransactionResponse.model_validate(transaction).model_dump() for transaction in transactions
-    ]
-    total_amount = sum(transaction["amount"] for transaction in serialized_transactions)
-    return {"transactions": serialized_transactions, "total_amount": total_amount}
+    return await TransactionService.list_transactions(
+        db, user.id, params.is_expense, params.category_id, params.year, params.month
+    )
 
 
-@router.put("/transactions/{id}", response_model=TransactionResponse)
+@router.put("/{id}", response_model=TransactionResponse)
 async def edit_transaction(
         transaction_id: int,
         transaction_data: TransactionUpdate,
         db: AsyncSession = Depends(get_db),
         user: User = Depends(get_current_user),
-        redis: aioredis = Depends(get_redis)
+        redis: aioredis.Redis = Depends(get_redis)
 ):
-    return await update_transaction(db, transaction_data, transaction_id, user.id, redis)
+    return await TransactionService.edit_transaction(db, transaction_data, transaction_id, user.id, redis)
 
 
-@router.delete("/transactions/{id}")
+@router.delete("/{id}")
 async def remove_transaction(
         transaction_id: int,
         db: AsyncSession = Depends(get_db),
         user: User = Depends(get_current_user),
-        redis: aioredis = Depends(get_redis)
+        redis: aioredis.Redis = Depends(get_redis)
 ):
-    await delete_transaction(db, transaction_id, user.id, redis)
+    await TransactionService.remove_transaction(db, transaction_id, user.id, redis)

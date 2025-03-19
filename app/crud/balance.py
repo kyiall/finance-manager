@@ -1,4 +1,4 @@
-async def get_balance(user_id: int, redis):
+async def get_user_balance(user_id: int, redis):
     balance = await redis.get(user_id)
     return balance if balance else 0
 

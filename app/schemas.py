@@ -1,10 +1,8 @@
-from enum import Enum
-
-from pydantic import BaseModel, EmailStr, confloat, field_validator
 from datetime import datetime
+from enum import Enum
 from typing import List, Optional
 
-# from app.core.utils import CustomError
+from pydantic import BaseModel, EmailStr, confloat
 
 
 class CategoryBase(BaseModel):
@@ -35,12 +33,6 @@ class TransactionBase(BaseModel):
     is_expense: bool
     category_id: int
 
-    # @field_validator('amount', mode='before')
-    # def validate_name(cls, value):
-    #     if value <= 0:
-    #         raise CustomError(status_code=400, name="Сумма должна быть больше 0")
-    #     return value
-
 
 class TransactionUpdate(BaseModel):
     amount: confloat(gt=0) | None = None
@@ -59,6 +51,18 @@ class TransactionResponse(TransactionBase):
 
     class Config:
         from_attributes = True
+
+
+class TransactionList(BaseModel):
+    transactions: List[TransactionResponse]
+    total_amount: float
+
+
+class TransactionListParams(BaseModel):
+    is_expense: bool
+    category_id: int | None = None
+    year: int | None = datetime.now().year
+    month: int | None = datetime.now().month
 
 
 class SubscriberPlanBase(BaseModel):
@@ -132,3 +136,10 @@ class UserResponse(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class UserLoginResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    balance: float
+    user_data: UserResponse
