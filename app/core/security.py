@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import settings, get_db
+from app.core.utils import CustomError
 from app.models.users import User
 from app.schemas.users import UserRole
 
@@ -52,15 +53,15 @@ async def get_current_user(
         payload = decode_token(token)
         user_id = payload.get("sub")
         if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise CustomError(status_code=401, name="Invalid token")
         user = (await db.scalars(select(User).where(User.id == int(user_id)))).first()
         if not user:
-            raise HTTPException(status_code=401, detail="User not found")
+            raise CustomError(status_code=401, name="User not found")
         return user
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
+        raise CustomError(status_code=401, name="Token expired")
     except jwt.JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise CustomError(status_code=401, name="Invalid token")
 
 
 def check_user_role(user: User = Depends(get_current_user)):

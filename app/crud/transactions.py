@@ -3,6 +3,7 @@ from sqlalchemy import extract, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.balance import update_balance
+from app.services.statistics import StatisticsService
 from app.models.transactions import Transaction
 from app.schemas.transactions import TransactionCreate, TransactionUpdate
 
@@ -18,6 +19,7 @@ async def create_transaction(
     await db.commit()
     await db.refresh(db_transaction)
     await update_balance(user_id, db_transaction.amount, db_transaction.is_expense, redis)
+    await StatisticsService.update_statistics(db, user_id, db_transaction, add=True)
     return db_transaction
 
 
@@ -69,9 +71,19 @@ async def delete_transaction(
     amount = transaction.amount
     await db.delete(transaction)
     await db.commit()
+    await StatisticsService.update_statistics(db, user_id, transaction, add=False)
     await redis.set(user_id, balance + amount)
 
 
 async def get_transaction(db: AsyncSession, transaction_id: int):
     transaction = (await db.scalars(select(Transaction).where(Transaction.id == transaction_id))).first()
     return transaction
+
+
+async def get_grouped_transactions(db: AsyncSession, user_id: int):
+    incomes = (await db.scalars(select(Transaction).where(
+        Transaction.user_id == user_id, Transaction.is_expense.is_(False)))).all()
+    expenses = (await db.scalars(select(Transaction).where(
+        Transaction.user_id == user_id, Transaction.is_expense.is_(True)))).all()
+
+    return incomes, expenses
