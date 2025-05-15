@@ -2,7 +2,7 @@ import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
+from app.core.db import get_db_master, get_db_replica
 from app.core.redis_conf import get_redis
 from app.core.security import get_current_user
 from app.models.users import User
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/transactions")
 @router.post("", response_model=TransactionResponse)
 async def add_transaction(
         transaction_data: TransactionCreate,
-        db: AsyncSession = Depends(get_db),
+        db: AsyncSession = Depends(get_db_master),
         user: User = Depends(get_current_user),
         redis: aioredis.Redis = Depends(get_redis),
 ):
@@ -26,7 +26,7 @@ async def add_transaction(
 @router.get("", response_model=TransactionList)
 async def list_transactions(
         params: TransactionListParams = Depends(),
-        db: AsyncSession = Depends(get_db),
+        db: AsyncSession = Depends(get_db_replica),
         user: User = Depends(get_current_user)
 ):
     return await TransactionService.list_transactions(
@@ -38,7 +38,7 @@ async def list_transactions(
 async def edit_transaction(
         transaction_id: int,
         transaction_data: TransactionUpdate,
-        db: AsyncSession = Depends(get_db),
+        db: AsyncSession = Depends(get_db_master),
         user: User = Depends(get_current_user),
         redis: aioredis.Redis = Depends(get_redis)
 ):
@@ -48,7 +48,7 @@ async def edit_transaction(
 @router.delete("/{id}")
 async def remove_transaction(
         transaction_id: int,
-        db: AsyncSession = Depends(get_db),
+        db: AsyncSession = Depends(get_db_master),
         user: User = Depends(get_current_user),
         redis: aioredis.Redis = Depends(get_redis)
 ):

@@ -3,7 +3,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Personal Finance Tracker"
-    DATABASE_URL: str
+    DATABASE_URL_MASTER: str
+    DATABASE_URL_REPLICA: str
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int

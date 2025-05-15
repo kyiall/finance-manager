@@ -7,7 +7,7 @@ from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import settings, get_db
+from app.core.db import settings, get_db_replica
 from app.core.utils import CustomError
 from app.models.users import User
 from app.schemas.users import UserRole
@@ -45,7 +45,7 @@ security = HTTPBearer()
 
 
 async def get_current_user(
-        db: AsyncSession = Depends(get_db),
+        db: AsyncSession = Depends(get_db_replica),
         credentials: HTTPAuthorizationCredentials = Security(security)
 ):
     token = credentials.credentials
