@@ -1,32 +1,42 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+import redis.asyncio as aioredis
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_db
-from app.crud.users import get_user_by_email, create_user, create_subscription, update_subscription, get_current_user
-from app.models import User
-from app.schemas import UserResponse, UserCreate, SubscriptionCreate, SubscriptionResponse, SubscriptionUpdate
+from app.core.db import get_db_master
+from app.core.redis_conf import get_redis
+from app.core.security import get_current_user
+from app.crud.balance import get_user_balance
+from app.crud.users import create_subscription
+from app.models.users import User
+from app.schemas.users import UserResponse, UserCreate, SubscriptionCreate, SubscriptionResponse, SubscriptionUpdate
+from app.services.users import UserService
 
 router = APIRouter()
 
 
 @router.post("/register/", response_model=UserResponse)
-def register(user_data: UserCreate, db: Session = Depends(get_db)):
-    db_user = get_user_by_email(db, user_data.email)
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    return create_user(db, user_data)
+async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db_master)):
+    return await UserService.register(user_data, db)
 
 
 @router.post("/subscriptions/", response_model=SubscriptionResponse)
-def add_subscription(subscription_data: SubscriptionCreate, user_id: int, db: Session = Depends(get_db)):
-    return create_subscription(db, subscription_data, user_id)
+async def add_subscription(
+        subscription_data: SubscriptionCreate,
+        db: AsyncSession = Depends(get_db_master),
+        user: User = Depends(get_current_user)
+):
+    return await create_subscription(db, subscription_data, user.id)
 
 
 @router.put("/subscriptions/{id}", response_model=SubscriptionResponse)
-def edit_subscription(
-        subscription_id: int,
+async def edit_subscription(
         subscription_data: SubscriptionUpdate,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db_master),
         user: User = Depends(get_current_user)
 ):
-    return update_subscription(db, subscription_data, subscription_id)
+    return await UserService.edit_subscription(db, subscription_data, user.subscription.id, user.id)
+
+
+@router.get("/get-balance/")
+async def get_balance(user: User = Depends(get_current_user), redis: aioredis.Redis = Depends(get_redis)):
+    return await get_user_balance(user.id, redis)

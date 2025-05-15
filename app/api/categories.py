@@ -1,57 +1,38 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_db
-from app.crud.categories import create_category, get_categories, update_category
-from app.crud.users import get_current_user
-from app.models import User, Category
-from app.schemas import CategoryResponse, CategoryCreate, CategoryUpdate
+from app.core.db import get_db_master, get_db_replica
+from app.core.security import get_current_user
+from app.crud.categories import get_categories
+from app.models.users import User
+from app.schemas.categories import CategoryResponse, CategoryCreate, CategoryUpdate
+from app.services.categories import CategoryService
 
-router = APIRouter()
-
-
-@router.post("/categories/", response_model=CategoryResponse)
-def add_category(
-        category_date: CategoryCreate,
-        user_id: int,
-        db: Session = Depends(get_db),
-        user: User = Depends(get_current_user)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user.subscription or not user.subscription.is_active:
-        if category_date.is_expense:
-            if db.query(Category).filter(
-                    Category.user_id == user.id,
-                    Category.is_expense.is_(True),
-                    Category.is_active.is_(True)
-            ).count() >= 10:
-                raise HTTPException(
-                    status_code=400, detail="Для добавления больше 10 категорий расходов оформите подписку"
-                )
-        elif db.query(Category).filter(
-                Category.user_id == user.id,
-                Category.is_expense.is_(False),
-                Category.is_active.is_(True)
-        ).count() >= 5:
-            raise HTTPException(
-                status_code=400, detail="Для добавления больше 5 категорий доходов оформите подписку"
-            )
-    return create_category(db, category_date, user_id)
+router = APIRouter(prefix="/categories")
 
 
-@router.get("/categories/", response_model=list[CategoryResponse])
-def list_categories(
-        user_id: int,
-        db: Session = Depends(get_db),
+@router.post("", response_model=CategoryResponse)
+async def add_category(
+        category_data: CategoryCreate,
+        db: AsyncSession = Depends(get_db_master),
         user: User = Depends(get_current_user)
 ):
-    return get_categories(db, user_id)
+    return await CategoryService.add_category(category_data, db, user)
 
 
-@router.put("/categories/{id}", response_model=CategoryResponse)
-def edit_category(
+@router.get("", response_model=list[CategoryResponse])
+async def list_categories(
+        db: AsyncSession = Depends(get_db_replica),
+        user: User = Depends(get_current_user)
+):
+    return await get_categories(db, user.id)
+
+
+@router.put("/{id}", response_model=CategoryResponse)
+async def edit_category(
         category_id: int,
         category_data: CategoryUpdate,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_db_master),
         user: User = Depends(get_current_user)
 ):
-    return update_category(db, category_data, category_id)
+    return await CategoryService.edit_category(db, category_data, category_id, user.id)
