@@ -17,8 +17,10 @@ runs:
 
     - name: Install proselint
       run: pip install proselint
+      shell: bash
 
     - name: Run proselint
       run: proselint $(find . -name '*.md') -S ${{ inputs.severity }}
+      shell: bash
 
 
