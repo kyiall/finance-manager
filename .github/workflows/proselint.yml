@@ -6,17 +6,17 @@ on:
     branches:
       - main
 
-name: "ShellCheck Action"
+name: "Linter Action"
 
 jobs:
-  shellcheck:
-    name: Shellcheck
+  linter:
+    name: Linter
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
+      - name: Run Linter
+        uses: ./.github/actions/custom_actions
         with:
           severity: error

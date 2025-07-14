@@ -1,0 +1,24 @@
+name: "Linter for .md files"
+description: "Linter for .md files"
+
+inputs:
+  severity:
+    description: "Severity level for proselint"
+    required: false
+    default: "warning"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Install proselint
+      run: pip install proselint
+
+    - name: Run proselint
+      run: proselint $(find . -name '*.md') -S ${{ inputs.severity }}
+
+
