@@ -3,6 +3,5 @@ repos:
     hooks:
       - id: run-makefile
         name: creating pdf
-        entry: make
+        entry: bash -c "make clean && make"
         language: system
-        types: [python]
