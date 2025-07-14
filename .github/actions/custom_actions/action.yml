@@ -1,12 +1,6 @@
 name: "Linter for .md files"
 description: "Linter for .md files"
 
-inputs:
-  severity:
-    description: "Severity level for proselint"
-    required: false
-    default: "warning"
-
 runs:
   using: "composite"
   steps:
@@ -20,7 +14,7 @@ runs:
       shell: bash
 
     - name: Run proselint
-      run: proselint $(find . -name '*.md') -S ${{ inputs.severity }}
+      run: proselint $(find . -name '*.md')
       shell: bash
 
 

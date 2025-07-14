@@ -18,5 +18,3 @@ jobs:
 
       - name: Run Linter
         uses: ./.github/actions/custom_actions
-        with:
-          severity: error
