@@ -14,8 +14,11 @@ asyncpg = "*"
 redis = {extras = ["async"], version = "*"}
 httpx = "*"
 psycopg2-binary = "*"
+numpy = "*"
+matplotlib = "*"
+pre-commit = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.10"
+python_version = "3.13"

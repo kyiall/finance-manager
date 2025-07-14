@@ -1,4 +1,4 @@
-FROM python:3.10.2-slim
+FROM python:3.13-slim
 
 WORKDIR /backend
 COPY Pipfile Pipfile.lock /app/
